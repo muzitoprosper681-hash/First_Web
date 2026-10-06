@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Classic Move – Move in Class</title>
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #fff; color: #1a0e00; overflow-x: hidden; }
+    img { max-width: 100%; display: block; }
+
+    /* ── Tokens ── */
+    :root {
+      --gold: #f5a623; --gold-lt: #ffc55a; --gold-dk: #c47f0a;
+      --bg: #ffffff; --sec-a: #fffaf3; --sec-b: #fff4e0;
+      --surface: #ffffff; --border: #f0c878; --border-dk: #d4940a;
+      --text: #1a0e00; --muted: #8a5a00;
+      --nav-h: 70px;
+    }
+
+    /* ── Header ── */
+    header {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: var(--nav-h);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 clamp(1rem, 5%, 4rem);
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid var(--border);
+      box-shadow: 0 2px 12px rgba(245,166,35,0.10);
+    }
+    .logo { display: inline-flex; align-items: center; text-decoration: none; flex-shrink: 0; }
+    .logo img { height: clamp(32px, 5vw, 46px); width: auto; object-fit: contain; }
+
+    /* Desktop nav links */
+    nav { display: flex; align-items: center; gap: clamp(0.8rem, 2vw, 1.8rem); }
+    nav a {
+      color: var(--text); text-decoration: none;
+      font-size: clamp(0.8rem, 1.2vw, 0.95rem); font-weight: 500;
+      position: relative; padding-bottom: 3px;
+      transition: color .25s;
+      white-space: nowrap;
+    }
+    nav a::after {
+      content: ''; position: absolute; bottom: 0; left: 0;
+      width: 0; height: 2px; background: var(--gold-dk); border-radius: 2px;
+      transition: width .28s cubic-bezier(.22,1,.36,1);
+    }
+    nav a:hover, nav a.active { color: var(--gold-dk); }
+    nav a:hover::after, nav a.active::after { width: 100%; }
+    nav a.nav-cta::after { display: none; }
+    .nav-cta {
+      background: var(--gold); color: var(--text) !important;
+      padding: clamp(6px,1vw,9px) clamp(14px,2vw,22px);
+      border-radius: 25px; font-weight: 700;
+      transition: background .2s, transform .1s;
+    }
+    .nav-cta:hover { background: var(--gold-lt) !important; transform: scale(1.04); }
+
+    /* Hamburger */
+    .menu-toggle {
+      display: none; flex-direction: column; gap: 5px;
+      background: none; border: none; cursor: pointer; padding: 6px; z-index: 300;
+    }
+    .menu-toggle span { display: block; width: 24px; height: 2px; background: var(--gold-dk); border-radius: 2px; transition: all .3s; }
+
+    /* Mobile overlay */
+    .mobile-nav {
+      display: none; position: fixed; inset: 0;
+      background: rgba(255,255,255,0.98); z-index: 250;
+      flex-direction: column; align-items: center; justify-content: center; gap: 2rem;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a { color: var(--text); text-decoration: none; font-size: clamp(1.2rem,5vw,1.6rem); font-weight: 700; transition: color .2s; }
+    .mobile-nav a:hover { color: var(--gold-dk); }
+    .mobile-nav .nav-cta { background: var(--gold); color: var(--text) !important; padding: 12px 32px; border-radius: 30px; }
+    .close-nav { position: absolute; top: 18px; right: 5%; background: none; border: none; color: var(--text); font-size: 2rem; cursor: pointer; }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative; min-height: 100svh;
+      display: flex; align-items: center; overflow: hidden;
+      padding-top: var(--nav-h);
+    }
+    .hero-bg {
+      position: absolute; inset: 0;
+      background: url('Logo.jpg') center/cover no-repeat;
+    }
+    .hero-bg::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(to right, rgba(255,248,235,.94) 0%, rgba(255,248,235,.7) 55%, rgba(255,248,235,.2) 100%);
+    }
+    .hero-bg::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(120deg, transparent 30%, rgba(245,166,35,.07) 50%, transparent 70%);
+      animation: shimmer 6s infinite linear;
+    }
+    @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+
+    .hero-content { position: relative; z-index: 2; padding: 0 clamp(1.5rem,8%,6rem); max-width: 640px; }
+    .hero-badge {
+      display: inline-block; background: rgba(245,166,35,.18); border: 1px solid var(--gold-dk);
+      color: var(--gold-dk); font-size: .75rem; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; padding: 6px 14px; border-radius: 20px; margin-bottom: 1.2rem;
+    }
+    .hero h1 { font-size: clamp(2rem,5.5vw,3.8rem); font-weight: 900; line-height: 1.1; margin-bottom: 1.2rem; color: var(--text); }
+    .hero h1 .accent { color: var(--gold-dk); }
+    .hero p { font-size: clamp(.95rem,1.5vw,1.1rem); color: var(--muted); line-height: 1.7; margin-bottom: 2rem; }
+    .hero-btns { display: flex; gap: 1rem; flex-wrap: wrap; }
+    .btn-primary {
+      background: var(--gold); color: var(--text); padding: 13px 30px; border-radius: 30px;
+      font-weight: 700; font-size: 1rem; text-decoration: none; transition: background .2s, transform .1s;
+    }
+    .btn-primary:hover { background: var(--gold-lt); transform: scale(1.04); }
+    .hero-scroll {
+      position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%); z-index: 2;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      color: var(--muted); font-size: .73rem; letter-spacing: 1px; text-transform: uppercase;
+    }
+    .hero-scroll span {
+      width: 1px; height: 46px; background: linear-gradient(to bottom, var(--gold), transparent);
+      animation: scrollDrop 1.5s ease-in-out infinite;
+    }
+    @keyframes scrollDrop { 0%,100%{opacity:0;transform:scaleY(0);transform-origin:top;} 50%{opacity:1;transform:scaleY(1);} }
+
+    /* ── Stats Bar ── */
+    .stats-bar {
+      background: linear-gradient(135deg,#fff4e0,#ffe8b0);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: clamp(24px,4vw,44px) clamp(1rem,5%,4rem);
+      display: flex; justify-content: center; align-items: center;
+      gap: clamp(16px,4vw,56px); flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-number { font-size: clamp(1.6rem,3.5vw,2.4rem); font-weight: 900; color: var(--gold-dk); display: block; }
+    .stat-label { color: var(--muted); font-size: .85rem; margin-top: 4px; }
+
+    /* ── Section base ── */
+    section { padding: clamp(50px,8vw,90px) clamp(1rem,5%,4rem); }
+    .section-label { display: block; color: var(--gold-dk); font-size: .78rem; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: .5rem; }
+    .section-title { font-size: clamp(1.6rem,3vw,2.6rem); font-weight: 800; margin-bottom: .5rem; color: var(--text); }
+    .section-sub { color: var(--muted); font-size: clamp(.9rem,1.5vw,1rem); max-width: 600px; margin-bottom: 2.5rem; line-height: 1.7; }
+
+    /* ── Car Grid ── */
+    #fleet { background: var(--sec-a); }
+    .cars-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(320px,100%),1fr)); gap: clamp(1rem,2vw,2rem); }
+
+    .car-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: transform .3s, box-shadow .3s; }
+    .car-card:hover { transform: translateY(-5px); box-shadow: 0 18px 48px rgba(245,166,35,.2); }
+    .car-card-top { display: flex; align-items: stretch; }
+
+    /* plate blur wrap */
+    .car-photo-wrap { position: relative; width: 60%; flex-shrink: 0; overflow: hidden; aspect-ratio: 4/3; }
+    .car-photo-wrap img { width: 100%; height: 100%; object-fit: cover; }
+    .car-photo-wrap::after {
+      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 20%;
+      backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+      background: rgba(26,14,0,.15);
+    }
+
+    .car-info-side {
+      flex: 1; padding: clamp(10px,2vw,18px) clamp(8px,1.5vw,14px);
+      background: linear-gradient(160deg,#fff8ee,#fff4e0);
+      display: flex; flex-direction: column; justify-content: center; gap: 10px;
+      border-left: 1px solid var(--border);
+    }
+    .car-meta { display: flex; flex-direction: column; gap: 6px; }
+    .car-meta-item { display: flex; align-items: center; gap: 7px; font-size: clamp(.72rem,1.2vw,.82rem); color: var(--muted); }
+    .car-meta-item .icon { width: 16px; height: 16px; fill: var(--gold-dk); flex-shrink: 0; }
+    .availability { display: inline-flex; align-items: center; gap: 6px; font-size: .74rem; font-weight: 700; color: #4cdb8a; }
+    .availability::before { content: ''; width: 7px; height: 7px; background: #4cdb8a; border-radius: 50%; animation: pulse 1.4s infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 0 0 0 rgba(76,219,138,.5);} 50%{box-shadow:0 0 0 5px rgba(76,219,138,0);} }
+
+    .car-card-bottom {
+      padding: clamp(10px,1.5vw,16px) clamp(12px,2vw,20px);
+      display: flex; align-items: center; justify-content: space-between;
+      border-top: 1px solid var(--border); background: var(--sec-b);
+    }
+    .car-name { font-size: clamp(.9rem,1.5vw,1.05rem); font-weight: 700; color: var(--text); }
+    .car-year { font-size: .76rem; color: var(--muted); margin-top: 2px; }
+
+    /* ── Interior Gallery ── */
+    #interior { background: var(--sec-b); }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px,100%),1fr)); gap: clamp(1rem,2vw,1.5rem); }
+    .gallery-item {
+      border-radius: 14px; overflow: hidden; position: relative;
+      aspect-ratio: 4/3; border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(245,166,35,.1);
+      transition: transform .3s, box-shadow .3s;
+    }
+    .gallery-item:hover { transform: translateY(-5px); box-shadow: 0 16px 36px rgba(245,166,35,.22); }
+    .gallery-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+    .gallery-item:hover img { transform: scale(1.05); }
+    .gallery-caption {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 12px 16px; font-size: .88rem; font-weight: 600; color: #fff;
+      background: linear-gradient(to top, rgba(26,14,0,.75) 0%, transparent 100%);
+    }
+
+    /* ── Wedding Section ── */
+    #wedding { background: var(--sec-a); }
+    .wedding-intro { max-width: 600px; margin-bottom: 2.5rem; }
+    .wedding-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px,100%),1fr)); gap: clamp(1rem,2vw,1.5rem); }
+    .wedding-item {
+      border-radius: 14px; overflow: hidden; position: relative;
+      aspect-ratio: 3/2; border: 1px solid var(--border);
+      box-shadow: 0 4px 16px rgba(245,166,35,.1);
+      transition: transform .3s, box-shadow .3s;
+    }
+    .wedding-item:hover { transform: translateY(-5px); box-shadow: 0 16px 36px rgba(245,166,35,.22); }
+    .wedding-item img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s; }
+    .wedding-item:hover img { transform: scale(1.05); }
+    .wedding-caption {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      padding: 12px 16px; font-size: .88rem; font-weight: 600; color: #fff;
+      background: linear-gradient(to top, rgba(26,14,0,.7) 0%, transparent 100%);
+    }
+
+    /* ── How It Works ── */
+    #how { background: var(--bg); }
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px,100%),1fr)); gap: clamp(1rem,2vw,2rem); counter-reset: step; }
+    .step {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+      padding: clamp(20px,3vw,32px) clamp(16px,2.5vw,24px);
+      position: relative; transition: transform .3s, box-shadow .3s;
+    }
+    .step:hover { transform: translateY(-4px); box-shadow: 0 12px 32px rgba(245,166,35,.15); }
+    .step::before {
+      counter-increment: step; content: counter(step,decimal-leading-zero);
+      position: absolute; top: -16px; left: 20px;
+      font-size: 2.2rem; font-weight: 900; color: var(--gold); opacity: .5; line-height: 1;
+    }
+    .step-icon { width: 46px; height: 46px; background: rgba(245,166,35,.12); border-radius: 12px; display: flex; align-items: center; justify-content: center; margin-bottom: .9rem; }
+    .step-icon svg { width: 24px; height: 24px; fill: var(--gold-dk); }
+    .step h3 { font-size: 1rem; font-weight: 700; margin-bottom: .4rem; color: var(--text); }
+    .step p { font-size: .87rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── Contact ── */
+    #contact-section { background: var(--sec-b); }
+    .contact-wrapper { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2rem; }
+    .contact-intro { max-width: 500px; }
+    .contact-intro p { color: var(--muted); font-size: 1rem; line-height: 1.7; margin-top: .5rem; }
+    .contact-btns { display: flex; gap: clamp(.6rem,2vw,1.2rem); flex-wrap: wrap; justify-content: center; }
+    .contact-btn {
+      display: inline-flex; align-items: center; gap: 10px;
+      padding: clamp(12px,2vw,16px) clamp(20px,4vw,32px);
+      border-radius: 50px; font-size: clamp(.9rem,1.5vw,1rem); font-weight: 700;
+      text-decoration: none; transition: transform .2s, box-shadow .2s;
+    }
+    .contact-btn:hover { transform: translateY(-3px); box-shadow: 0 10px 28px rgba(0,0,0,.12); }
+    .contact-btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+    .btn-whatsapp { background: #25d366; color: #fff; }
+    .btn-whatsapp:hover { background: #1ebe5d; }
+    .btn-call { background: var(--gold); color: var(--text); }
+    .btn-call:hover { background: var(--gold-dk); color: #fff; }
+    .contact-note { font-size: .82rem; color: var(--muted); }
+
+    /* ── Location ── */
+    #location { background: var(--bg); }
+    .location-wrapper { display: flex; gap: clamp(1.5rem,4vw,3.5rem); align-items: flex-start; flex-wrap: wrap; }
+    .location-info { flex: 1; min-width: 260px; }
+    .location-details { display: flex; flex-direction: column; gap: 1.2rem; margin-top: 1.5rem; }
+    .location-item { display: flex; align-items: flex-start; gap: 12px; }
+    .location-icon { width: 42px; height: 42px; background: rgba(245,166,35,.12); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .location-icon svg { width: 20px; height: 20px; fill: var(--gold-dk); }
+    .location-item-text strong { display: block; font-size: .8rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--gold-dk); margin-bottom: 2px; }
+    .location-item-text span, .location-item-text a { font-size: .93rem; color: var(--muted); text-decoration: none; line-height: 1.5; }
+    .location-item-text a:hover { color: var(--gold-dk); }
+    .location-map-frame { flex: 1.4; min-width: 260px; border-radius: 18px; overflow: hidden; border: 2px solid var(--border); box-shadow: 0 8px 32px rgba(245,166,35,.14); aspect-ratio: 16/9; background: #f5e9cc; }
+    .location-map-fallback { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; height: 100%; padding: 2rem; text-align: center; }
+    .location-map-fallback svg { width: 50px; height: 50px; fill: var(--gold-dk); animation: pinBounce 2.4s ease-in-out infinite; }
+    .location-map-fallback p { font-size: .88rem; color: var(--muted); }
+    .btn-open-map {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--gold); color: var(--text); padding: 11px 24px; border-radius: 25px;
+      font-weight: 700; font-size: .9rem; text-decoration: none; transition: background .2s, transform .15s;
+    }
+    .btn-open-map:hover { background: var(--gold-dk); color: #fff; transform: translateY(-2px); }
+
+    /* ── Directions ── */
+    #directions { background: var(--sec-a); }
+    .directions-wrapper { display: flex; gap: clamp(1.5rem,4vw,4rem); align-items: center; flex-wrap: wrap; }
+    .directions-text { flex: 1; min-width: 260px; }
+    .btn-directions {
+      display: inline-flex; align-items: center; gap: 10px;
+      background: var(--gold); color: var(--text); padding: 14px 32px; border-radius: 30px;
+      font-weight: 700; font-size: 1rem; text-decoration: none;
+      margin-top: .5rem; margin-bottom: 1rem;
+      transition: background .2s, transform .15s, box-shadow .2s;
+      box-shadow: 0 4px 18px rgba(245,166,35,.25);
+    }
+    .btn-directions:hover { background: var(--gold-dk); color: #fff; transform: translateY(-3px); box-shadow: 0 10px 28px rgba(196,127,10,.3); }
+    .directions-note { font-size: .82rem; color: var(--muted); }
+    .directions-map { flex: 1; min-width: 240px; }
+    .map-preview-link { text-decoration: none; display: block; }
+    .map-preview {
+      background: linear-gradient(135deg,#fff8ee,#ffe8b0); border: 2px solid var(--border);
+      border-radius: 20px; padding: clamp(1.5rem,3vw,3rem) clamp(1rem,2vw,2rem);
+      display: flex; flex-direction: column; align-items: center; gap: .75rem;
+      text-align: center; transition: transform .3s, box-shadow .3s; cursor: pointer; position: relative; overflow: hidden;
+    }
+    .map-preview:hover { transform: translateY(-5px); box-shadow: 0 18px 48px rgba(245,166,35,.22); }
+    .map-pin-icon { width: 54px; height: 54px; filter: drop-shadow(0 4px 8px rgba(196,127,10,.3)); animation: pinBounce 2.4s ease-in-out infinite; }
+    @keyframes pinBounce { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-8px);} }
+    .map-preview-label { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    .map-preview-sub { font-size: .8rem; color: var(--muted); }
+
+    /* ── Footer ── */
+    footer { background: #000; border-top: 1px solid var(--border); padding: clamp(30px,6vw,60px) clamp(1rem,5%,4rem) clamp(20px,4vw,30px); }
+    .footer-top { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: clamp(1.5rem,3vw,3rem); margin-bottom: 2.5rem; }
+    .footer-brand .logo { margin-bottom: .8rem; }
+    .footer-brand .logo img { height: 40px; }
+    .footer-brand p { color: #c8a96e; font-size: .87rem; line-height: 1.7; max-width: 260px; }
+    .footer-col h4 { font-size: .78rem; font-weight: 700; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); margin-bottom: .9rem; }
+    .footer-col a { display: block; color: #c8a96e; text-decoration: none; font-size: .87rem; margin-bottom: .5rem; transition: color .2s; }
+    .footer-col a:hover { color: #fff; }
+    .footer-bottom { border-top: 1px solid rgba(245,166,35,.2); padding-top: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .8rem; font-size: .82rem; color: #c8a96e; }
+
+    /* ── Scroll-Reveal ── */
+    .reveal { opacity: 0; transform: translateY(32px); transition: opacity .65s cubic-bezier(.22,1,.36,1), transform .65s cubic-bezier(.22,1,.36,1); }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+    .stat { opacity: 0; }
+    .stat.visible { animation: statPop .55s cubic-bezier(.22,1,.36,1) both; }
+    @keyframes statPop { from{opacity:0;transform:translateY(20px) scale(.9);} to{opacity:1;transform:translateY(0) scale(1);} }
+    .section-label, .section-title, .section-sub { opacity: 0; transform: translateY(20px); transition: opacity .6s ease, transform .6s ease; }
+    .section-label.visible, .section-title.visible, .section-sub.visible { opacity: 1; transform: translateY(0); }
+    .gallery-item, .wedding-item { opacity: 0; transform: scale(.95) translateY(18px); transition: opacity .6s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.22,1,.36,1), box-shadow .3s; }
+    .gallery-item.visible, .wedding-item.visible { opacity: 1; transform: scale(1) translateY(0); }
+    .step { opacity: 0; transform: translateY(28px); transition: opacity .6s ease, transform .6s ease, box-shadow .3s; }
+    .step.visible { opacity: 1; transform: translateY(0); }
+    .contact-btn { opacity: 0; transform: translateY(18px); transition: opacity .55s ease, transform .55s cubic-bezier(.34,1.56,.64,1); }
+    .contact-btn.visible { opacity: 1; transform: translateY(0); }
+    .footer-brand, .footer-col { opacity: 0; transform: translateY(22px); transition: opacity .6s ease, transform .6s ease; }
+    .footer-brand.visible, .footer-col.visible { opacity: 1; transform: translateY(0); }
+    @keyframes heroFadeUp { from{opacity:0;transform:translateY(28px);} to{opacity:1;transform:translateY(0);} }
+    .hero-badge { animation: heroFadeUp .7s ease .1s both; }
+    .hero h1    { animation: heroFadeUp .7s ease .25s both; }
+    .hero p     { animation: heroFadeUp .7s ease .4s both; }
+    .hero-btns  { animation: heroFadeUp .7s ease .55s both; }
+
+    /* ── RESPONSIVE ── */
+
+    /* Tablet: ≤1024px */
+    @media (max-width: 1024px) {
+      nav { display: none; }
+      .menu-toggle { display: flex; }
+      .footer-top { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* Small tablet: ≤768px */
+    @media (max-width: 768px) {
+      .hero-bg::before { background: linear-gradient(to bottom, rgba(255,248,235,.93) 0%, rgba(255,248,235,.78) 55%, rgba(255,248,235,.93) 100%); }
+      .hero-content { max-width: 100%; text-align: center; }
+      .hero-btns { justify-content: center; }
+      .hero-scroll { display: none; }
+      .steps { grid-template-columns: repeat(2, 1fr); }
+      .location-wrapper { flex-direction: column; }
+      .directions-wrapper { flex-direction: column; gap: 2rem; }
+      .footer-top { grid-template-columns: 1fr 1fr; }
+      .footer-brand { grid-column: 1 / -1; }
+      .footer-bottom { flex-direction: column; text-align: center; gap: .4rem; }
+    }
+
+    /* Mobile: ≤600px */
+    @media (max-width: 600px) {
+      .car-card-top { flex-direction: column; }
+      .car-photo-wrap { width: 100%; aspect-ratio: 16/9; }
+      .car-info-side { width: 100%; border-left: none; border-top: 1px solid var(--border); flex-direction: row; flex-wrap: wrap; align-items: center; }
+      .car-meta { flex-direction: row; flex-wrap: wrap; gap: 6px; flex: 1; }
+      .availability { margin-left: auto; }
+      .steps { grid-template-columns: 1fr; }
+      .contact-btns { flex-direction: column; align-items: stretch; }
+      .contact-btn { justify-content: center; }
+      .footer-top { grid-template-columns: 1fr; }
+      .footer-brand p { max-width: 100%; }
+    }
+
+    /* Very small: ≤380px */
+    @media (max-width: 380px) {
+      .hero h1 { font-size: 1.8rem; }
+      .stat-number { font-size: 1.6rem; }
+    }
+
+    /* Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      .reveal, .stat, .section-label, .section-title, .section-sub,
+      .gallery-item, .wedding-item, .step, .contact-btn, .footer-brand, .footer-col,
+      .hero-badge, .hero h1, .hero p, .hero-btns {
+        opacity: 1 !important; transform: none !important;
+        transition: none !important; animation: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header>
+    <a href="#home" class="logo"><img src="Logo.jpg" alt="Classic Move" /></a>
+    <nav>
+      <a href="#fleet">Fleet</a>
+      <a href="#interior">Interiors</a>
+      <a href="#wedding">Weddings</a>
+      <a href="#vans">Vans</a>
+      <a href="#how">How It Works</a>
+      <a href="#location">Location</a>
+      <a href="#contact-section">Contact</a>
+      <a href="#contact-section" class="nav-cta">Book Now</a>
+    </nav>
+    <button class="menu-toggle" aria-label="Open menu" onclick="document.getElementById('mobileNav').classList.add('open')">
+      <span></span><span></span><span></span>
+    </button>
+  </header>
+
+  <!-- MOBILE NAV -->
+  <div class="mobile-nav" id="mobileNav">
+    <button class="close-nav" aria-label="Close menu" onclick="document.getElementById('mobileNav').classList.remove('open')">✕</button>
+    <a href="#fleet"           onclick="document.getElementById('mobileNav').classList.remove('open')">Fleet</a>
+    <a href="#interior"        onclick="document.getElementById('mobileNav').classList.remove('open')">Interiors</a>
+    <a href="#wedding"         onclick="document.getElementById('mobileNav').classList.remove('open')">Weddings</a>
+    <a href="#vans"            onclick="document.getElementById('mobileNav').classList.remove('open')">Vans</a>
+    <a href="#how"             onclick="document.getElementById('mobileNav').classList.remove('open')">How It Works</a>
+    <a href="#location"        onclick="document.getElementById('mobileNav').classList.remove('open')">Location</a>
+    <a href="#contact-section" onclick="document.getElementById('mobileNav').classList.remove('open')">Contact</a>
+    <a href="#contact-section" class="nav-cta" onclick="document.getElementById('mobileNav').classList.remove('open')">Book Now</a>
+  </div>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <span class="hero-badge">🚗 Classic Move</span>
+      <h1>Move in <span class="accent">Class.</span><br>Hire with Confidence.</h1>
+      <p>Choose from our handpicked fleet of premium vehicles. Weddings, corporate trips, daily hire — we deliver comfort every time.</p>
+      <div class="hero-btns">
+        <a href="#fleet" class="btn-primary">Browse Fleet</a>
+      </div>
+    </div>
+    <div class="hero-scroll">Scroll<span></span></div>
+  </section>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-number">120+</span><div class="stat-label">Vehicles Available</div></div>
+    <div class="stat"><span class="stat-number">4.9★</span><div class="stat-label">Customer Rating</div></div>
+    <div class="stat"><span class="stat-number">8K+</span><div class="stat-label">Happy Clients</div></div>
+    <div class="stat"><span class="stat-number">24/7</span><div class="stat-label">Support</div></div>
+  </div>
+
+
+  <!-- FLEET -->
+  <section id="fleet">
+    <span class="section-label reveal">Available Now</span>
+    <h2 class="section-title reveal">Cars For Hire</h2>
+    <p class="section-sub reveal">Browse our premium selection. Every car is fully insured, regularly serviced, and ready to go.</p>
+    <div class="cars-grid">
+
+      <!-- SVG shortcuts -->
+      <!-- clock icon path: M12 2a10 10 ... -->
+
+      <!-- Card 1 — car40 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car40.jpg" alt="Toyota Land Cruiser" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 7</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Automatic</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">BENZ</div><div class="car-year">2023 · SUV</div></div>
+        </div>
+      </div>
+
+      <!-- Card 2 — car41 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car41.jpg" alt="Mercedes-Benz C-Class" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Automatic</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">LANDCRUISER</div><div class="car-year">2023 · Luxury Sedan</div></div>
+        </div>
+      </div>
+
+      <!-- Card 3 — car43 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car43.jpg" alt="BMW 5 Series" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Manual</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">BENZ GLE</div><div class="car-year">2022 · Executive Sedan</div></div>
+        </div>
+      </div>
+
+      <!-- Card 4 — car44 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car44.jpg" alt="Audi A6" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Automatic</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">RANGEROVER VOGUE</div><div class="car-year">2024 · Executive Sedan</div></div>
+        </div>
+      </div>
+
+      <!-- Card 5 — car45 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car45.jpg" alt="Toyota Camry" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Automatic</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">RANGEROVER AUTO</div><div class="car-year">2023 · Sedan</div></div>
+        </div>
+      </div>
+
+      <!-- Card 6 — car46 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car46.jpg" alt="Range Rover Sport" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Automatic</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">CADILLAC ESCALADE</div><div class="car-year">2024 · Premium SUV</div></div>
+        </div>
+      </div>
+
+      <!-- Card 7 — car47 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car47.jpg" alt="Lexus ES 350" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Automatic</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">BENZ</div><div class="car-year">2022 · Luxury Sedan</div></div>
+        </div>
+      </div>
+
+      <!-- Card 8 — car48 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car48.jpg" alt="Honda CR-V" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Automatic</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">LEXUS V8</div><div class="car-year">2023 · SUV</div></div>
+        </div>
+      </div>
+
+      <!-- Card 9 — car49 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car49.jpg" alt="Mercedes-Benz GLE" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 7</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Automatic</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">GLE</div><div class="car-year">2023 · Luxury SUV</div></div>
+        </div>
+      </div>
+
+      <!-- Card 10 — car50 -->
+      <div class="car-card reveal">
+        <div class="car-card-top">
+          <div class="car-photo-wrap"><img src="car50.jpg" alt="Porsche Cayenne" /></div>
+          <div class="car-info-side">
+            <div class="car-meta">
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div>
+              <div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99zM6.5 15a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm11 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zM5 10l1.5-4.5h11L19 10H5z"/></svg>Manual</div>
+            </div>
+            <div class="availability">Available</div>
+          </div>
+        </div>
+        <div class="car-card-bottom">
+          <div><div class="car-name">LAND CRUISER V8</div><div class="car-year">2022 · Sport SUV</div></div>
+        </div>
+      </div>
+
+      <!-- Cards 11–22 keep Car11–Car22 images -->
+      <!-- Card 11 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car11.jpg" alt="Volkswagen Passat"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">LAND CRUISER V8</div><div class="car-year">2023 · Saloon</div></div></div></div>
+      <!-- Card 12 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car12.jpg" alt="Nissan Patrol"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 7</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">CADILLAC ESCALADE</div><div class="car-year">2023 · Full-Size SUV</div></div></div></div>
+      <!-- Card 13 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car13.jpg" alt="BMW X5"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">BENZ G CLASS</div><div class="car-year">2023 · Luxury SUV</div></div></div></div>
+      <!-- Card 14 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car14.jpg" alt="Audi Q7"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 7</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Manual</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">BENZ G-WAGON</div><div class="car-year">2022 · 7-Seat SUV</div></div></div></div>
+      <!-- Card 15 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car15.jpg" alt="Toyota Prado"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 7</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">LAND CRUISER G-CLASS</div><div class="car-year">2023 · 4×4 SUV</div></div></div></div>
+      <!-- Card 16 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car16.jpg" alt="Volvo XC90"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">LEXUS LX</div><div class="car-year">2023 · Premium SUV</div></div></div></div>
+      <!-- Card 17 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car17.jpg" alt="Lexus LX 600"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">V8</div><div class="car-year">2024 · Full-Size SUV</div></div></div></div>
+      <!-- Card 18 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car18.jpg" alt="Ford Ranger"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Manual</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">RANGE ROVER</div><div class="car-year">2022 · Pick-Up</div></div></div></div>
+      <!-- Card 19 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car19.jpg" alt="Hyundai Tucson"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">V8</div><div class="car-year">2023 · Crossover</div></div></div></div>
+      <!-- Card 20 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car20.jpg" alt="Mercedes-Benz E-Class"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">LAND CRUISER-V8</div><div class="car-year">2024 · Executive Sedan</div></div></div></div>
+      <!-- Card 21 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Jeep1.jpeg" alt="JEEP"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 7</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">G-Class</div><div class="car-year">2023 · MPV</div></div></div></div>
+      <!-- Card 22 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Car22.jpg" alt="Jeep Grand Cherokee"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">LAND CRUISER-TX</div><div class="car-year">2024 · Premium SUV</div></div></div></div>
+      <!-- Card 23 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Jeep2.jpg" alt="TOYOTA"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">TOYOTA</div><div class="car-year">2023 · SUV</div></div></div></div>
+      <!-- Card 24 --><div class="car-card reveal"><div class="car-card-top"><div class="car-photo-wrap"><img src="Jeep3.jpg" alt="JEEP"/></div><div class="car-info-side"><div class="car-meta"><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 13h-2V7h2v8z"/></svg>Daily · Weekly</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M12 12c2.7 0 4.8-2.1 4.8-4.8S14.7 2.4 12 2.4 7.2 4.5 7.2 7.2 9.3 12 12 12zm0 2.4c-3.2 0-9.6 1.6-9.6 4.8v2.4h19.2v-2.4c0-3.2-6.4-4.8-9.6-4.8z"/></svg>Seats 5</div><div class="car-meta-item"><svg class="icon" viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg>Automatic</div></div><div class="availability">Available</div></div></div><div class="car-card-bottom"><div><div class="car-name">JEEP</div><div class="car-year">2023 · SUV</div></div></div></div>
+
+    </div>
+  </section>
+
+
+  <!-- INTERIOR GALLERY -->
+  <section id="interior">
+    <span class="section-label reveal">Comfort &amp; Luxury</span>
+    <h2 class="section-title reveal">Inside Our Fleet</h2>
+    <p class="section-sub reveal">Every car is maintained to the highest standard — clean, comfortable, and ready for the road.</p>
+    <div class="gallery-grid">
+      <div class="gallery-item"><img src="Inside1.jpg" alt="Interior 1"/><div class="gallery-caption">Premium Cabin Finish</div></div>
+      <div class="gallery-item"><img src="Inside2.jpg" alt="Interior 2"/><div class="gallery-caption">Modern Dashboard & Controls</div></div>
+      <div class="gallery-item"><img src="Inside3.jpg" alt="Interior 3"/><div class="gallery-caption">Spacious &amp; Comfortable Seating</div></div>
+      <div class="gallery-item"><img src="inside21.jpg" alt="Interior 4"/><div class="gallery-caption">Refined Interior Details</div></div>
+      <div class="gallery-item"><img src="inside22.jpg" alt="Interior 5"/><div class="gallery-caption">Executive Comfort</div></div>
+      <div class="gallery-item"><img src="iside20.jpg" alt="Interior 6"/><div class="gallery-caption">Luxury Atmosphere</div></div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section id="how">
+    <span class="section-label reveal">Simple Process</span>
+    <h2 class="section-title reveal">How It Works</h2>
+    <p class="section-sub reveal">Getting behind the wheel takes just a few minutes. Here's the process from browsing to driving.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.47 6.47 0 0 0 16 9.5 6.5 6.5 0 1 0 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg></div>
+        <h3>Browse &amp; Choose</h3>
+        <p>Explore our fleet and find the perfect car for your needs and budget.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M17 12h-5v5h5v-5zM16 1v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19a2 2 0 0 0 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-1V1h-2zm3 18H5V8h14v11z"/></svg></div>
+        <h3>Pick Your Dates</h3>
+        <p>Select your hire start date, duration, and pick-up location in seconds.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M6.62 10.79a15.053 15.053 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.39 21 3 13.61 3 4.5c0-.55.45-1 1-1H8c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.71 2.7z"/></svg></div>
+        <h3>Contact Us</h3>
+        <p>Reach us on WhatsApp or call directly. We confirm your booking instantly.</p>
+      </div>
+      <div class="step">
+        <div class="step-icon"><svg viewBox="0 0 24 24"><path d="M18.92 5.01C18.72 4.42 18.16 4 17.5 4h-11c-.66 0-1.21.42-1.42 1.01L3 11v8a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h12v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-8l-2.08-5.99z"/></svg></div>
+        <h3>Hit the Road</h3>
+        <p>Pick up your car and enjoy the drive. Our team is available 24/7 if you need us.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- WEDDINGS -->
+  <section id="wedding">
+    <span class="section-label reveal">Special Occasions</span>
+    <h2 class="section-title reveal">Wedding Car Hire</h2>
+    <p class="section-sub reveal">Make your special day unforgettable. Our beautifully decorated fleet is available for weddings, engagements, and all milestone celebrations.</p>
+    <div class="wedding-grid">
+      <div class="wedding-item"><img src="wed1.jpg" alt="Wedding car 1"/><div class="wedding-caption">Bridal Car Service</div></div>
+      <div class="wedding-item"><img src="wed2.jpg" alt="Wedding car 2"/><div class="wedding-caption">Decorated Fleet</div></div>
+      <div class="wedding-item"><img src="wed3.jpg" alt="Wedding car 3"/><div class="wedding-caption">Luxury Wedding Rides</div></div>
+      <div class="wedding-item"><img src="wed4.jpg" alt="Wedding car 4"/><div class="wedding-caption">Memorable Moments</div></div>
+    </div>
+  </section>
+
+  <!-- VANS -->
+  <section id="vans">
+    <span class="section-label reveal">Group &amp; Cargo Travel</span>
+    <h2 class="section-title reveal">Van Hire</h2>
+    <p class="section-sub reveal">Need to move a group or carry extra luggage? Our spacious, well-maintained vans are available for hire — perfect for trips, events, and transfers.</p>
+    <div class="wedding-grid">
+      <div class="wedding-item reveal"><img src="van1.jpg" alt="Van 1"/><div class="wedding-caption">Spacious Group Van</div></div>
+      <div class="wedding-item reveal"><img src="van2.jpeg" alt="Van 2"/><div class="wedding-caption">Comfortable People Carrier</div></div>
+      <div class="wedding-item reveal"><img src="van3.jpeg" alt="Van 3"/><div class="wedding-caption">Event Transfer Van</div></div>
+      <div class="wedding-item reveal"><img src="van4.jpeg" alt="Van 4"/><div class="wedding-caption">Luggage &amp; Cargo Van</div></div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact-section">
+    <div class="contact-wrapper">
+      <div class="contact-intro">
+        <span class="section-label reveal">Get In Touch</span>
+        <h2 class="section-title reveal">Ready to Book?</h2>
+        <p class="reveal">Reach us directly on WhatsApp for instant replies, or give us a call and we'll sort your hire in minutes.</p>
+      </div>
+      <div class="contact-btns">
+        <a href="https://wa.me/256749972927" target="_blank" rel="noopener" class="contact-btn btn-whatsapp reveal">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.554 4.103 1.523 5.824L0 24l6.335-1.502A11.942 11.942 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.818a9.818 9.818 0 0 1-5.015-1.376l-.36-.214-3.727.883.936-3.618-.235-.372A9.818 9.818 0 1 1 12 21.818z"/></svg>
+          Chat on WhatsApp
+        </a>
+        <a href="tel:+256749972927" class="contact-btn btn-call reveal">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.053 15.053 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.39 21 3 13.61 3 4.5c0-.55.45-1 1-1H8c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.71 2.7z"/></svg>
+          Call Us Now
+        </a>
+      </div>
+      <p class="contact-note reveal">📞 +256 749 972 927 &nbsp;·&nbsp; Available 24/7</p>
+    </div>
+  </section>
+
+  <!-- LOCATION -->
+  <section id="location">
+    <span class="section-label reveal">Where We Are</span>
+    <h2 class="section-title reveal">Our Location</h2>
+    <p class="section-sub reveal">Visit us in person or use the map to plan your trip. We're ready to welcome you.</p>
+    <div class="location-wrapper">
+      <div class="location-info reveal">
+        <div class="location-details">
+          <div class="location-item">
+            <div class="location-icon"><svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg></div>
+            <div class="location-item-text"><strong>Address</strong><span>Kampala, Uganda</span></div>
+          </div>
+          <div class="location-item">
+            <div class="location-icon"><svg viewBox="0 0 24 24"><path d="M6.62 10.79a15.053 15.053 0 0 0 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.39 21 3 13.61 3 4.5c0-.55.45-1 1-1H8c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.24 1.02l-2.71 2.7z"/></svg></div>
+            <div class="location-item-text"><strong>Phone / WhatsApp</strong><a href="tel:+256749972927">+256 749 972 927</a></div>
+          </div>
+          <div class="location-item">
+            <div class="location-icon"><svg viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg></div>
+            <div class="location-item-text"><strong>Hours</strong><span>Mon – Sun · 7:00 AM – 9:00 PM</span></div>
+          </div>
+          <div class="location-item">
+            <div class="location-icon"><svg viewBox="0 0 24 24"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.36 4.9c-.21.07-.36.25-.36.48V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.64-1.9c.21-.07.36-.25.36-.48V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg></div>
+            <div class="location-item-text"><strong>Directions</strong><a href="https://share.google/LOvjz1okZsqKDrKzt" target="_blank" rel="noopener">Open in Google Maps →</a></div>
+          </div>
+        </div>
+        <a href="https://share.google/LOvjz1okZsqKDrKzt" target="_blank" rel="noopener" class="btn-open-map reveal" style="margin-top:1.8rem;">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+          Get Directions
+        </a>
+      </div>
+      <div class="location-map-frame reveal">
+        <div class="location-map-fallback">
+          <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+          <p><strong>Classic Move</strong><br>Kampala, Uganda</p>
+          <a href="https://share.google/LOvjz1okZsqKDrKzt" target="_blank" rel="noopener" class="btn-open-map">View on Google Maps</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DIRECTIONS -->
+  <section id="directions" style="background:var(--sec-a);">
+    <div class="directions-wrapper">
+      <div class="directions-text">
+        <span class="section-label reveal">Find Us</span>
+        <h2 class="section-title reveal">How to Get Here</h2>
+        <p class="section-sub reveal">We're easy to find. Tap the button below to open turn-by-turn directions straight to our location.</p>
+        <a href="https://share.google/LOvjz1okZsqKDrKzt" target="_blank" rel="noopener noreferrer" class="btn-directions reveal">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+          Get Directions
+        </a>
+        <p class="directions-note reveal">Opens in Google Maps · Available 24/7</p>
+      </div>
+      <div class="directions-map reveal">
+        <a href="https://share.google/LOvjz1okZsqKDrKzt" target="_blank" rel="noopener noreferrer" class="map-preview-link">
+          <div class="map-preview">
+            <svg class="map-pin-icon" viewBox="0 0 24 24" fill="var(--gold-dk)"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/></svg>
+            <span class="map-preview-label">Classic Move</span>
+            <span class="map-preview-sub">Tap to open in Google Maps</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer id="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="#home" class="logo"><img src="Logo.jpg" alt="Classic Move" /></a>
+        <p>Classic Move — your premium car hire partner in Uganda. Move in class, every time.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Fleet</h4>
+        <a href="#fleet">Luxury Sedans</a>
+        <a href="#fleet">SUVs &amp; 4x4s</a>
+        <a href="#wedding">Wedding Cars</a>
+        <a href="#fleet">Economy</a>
+      </div>
+      <div class="footer-col">
+        <h4>Services</h4>
+        <a href="#wedding">Wedding Hire</a>
+        <a href="#interior">Interior Gallery</a>
+        <a href="#how">How It Works</a>
+        <a href="#contact-section">Book Now</a>
+      </div>
+      <div class="footer-col">
+        <h4>Contact</h4>
+        <a href="tel:+256749972927">+256 749 972 927</a>
+        <a href="https://wa.me/256749972927" target="_blank" rel="noopener">WhatsApp Us</a>
+        <a href="#location">Our Location</a>
+        <a href="https://share.google/LOvjz1okZsqKDrKzt" target="_blank" rel="noopener">Directions</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 Classic Move. All rights reserved.</span>
+      <span>📞 +256 749 972 927 · Available 24/7</span>
+    </div>
+  </footer>
+
+  <script>
+    /* ── Scroll-reveal ── */
+    (function () {
+      const sel = [
+        '.reveal', '.stat', '.section-label', '.section-title', '.section-sub',
+        '.gallery-item', '.wedding-item', '.step', '.contact-btn',
+        '.footer-brand', '.footer-col'
+      ];
+      const els = document.querySelectorAll(sel.join(','));
+      els.forEach(el => {
+        const siblings = [...(el.parentElement?.children || [])].filter(c => c.classList[0] === el.classList[0]);
+        const idx = siblings.indexOf(el);
+        if (idx > 0) el.style.transitionDelay = (idx * 0.08) + 's';
+      });
+      const io = new IntersectionObserver(entries => {
+        entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+      }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+      els.forEach(el => io.observe(el));
+    })();
+
+    /* ── Nav scroll-spy ── */
+    (function () {
+      const sections = document.querySelectorAll('section[id]');
+      const links = document.querySelectorAll('nav a:not(.nav-cta)');
+      const spy = new IntersectionObserver(entries => {
+        entries.forEach(e => {
+          if (e.isIntersecting) {
+            links.forEach(l => l.classList.toggle('active', l.getAttribute('href') === '#' + e.target.id));
+          }
+        });
+      }, { threshold: 0.3 });
+      sections.forEach(s => spy.observe(s));
+    })();
+  </script>
+</body>
+</html>
